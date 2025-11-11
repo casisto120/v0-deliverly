@@ -1,26 +1,8 @@
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
-export default async function Home() {
-  const supabase = await createClient()
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  // If user is authenticated and has a shop, redirect to dashboard
-  if (session) {
-    const { data: shops } = await supabase.from("shops").select("*").limit(1)
-
-    if (shops && shops.length > 0) {
-      redirect("/dashboard")
-    } else {
-      redirect("/setup")
-    }
-  }
-
+// The middleware will handle redirecting authenticated users
+export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center px-4">
       <div className="max-w-md w-full space-y-8 text-center">

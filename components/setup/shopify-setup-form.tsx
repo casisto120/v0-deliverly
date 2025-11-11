@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -42,27 +41,43 @@ export default function ShopifySetupForm() {
         }
       }
 
+      console.log("[v0] Submitting setup for domain:", normalizedDomain)
+
       const response = await fetch("/api/shopify/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ shopName: normalizedDomain }),
       })
 
+      const responseText = await response.text()
+      console.log("[v0] Setup response status:", response.status)
+      console.log("[v0] Setup response:", responseText)
+
       if (!response.ok) {
-        throw new Error("Setup failed")
+        let errorMessage = "Failed to start setup"
+        try {
+          const errorData = JSON.parse(responseText)
+          errorMessage = errorData.error || errorMessage
+        } catch {
+          errorMessage = responseText || errorMessage
+        }
+        throw new Error(errorMessage)
       }
 
-      const data = await response.json()
+      const data = JSON.parse(responseText)
 
       // Redirect to Shopify OAuth URL
       if (data.authUrl) {
+        console.log("[v0] Redirecting to Shopify OAuth")
         window.location.href = data.authUrl
+      } else {
+        throw new Error("No auth URL received from server")
       }
     } catch (error: any) {
-      console.error("[v0] Setup error:", error)
+      console.error("[v0] Setup error details:", error)
       toast({
         title: "Error",
-        description: error.message || "Failed to start setup",
+        description: error.message || "Failed to start setup. Please try again.",
         variant: "destructive",
       })
     } finally {

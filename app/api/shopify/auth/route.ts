@@ -13,6 +13,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing shop name" }, { status: 400 })
     }
 
+    if (!SHOPIFY_API_KEY || !SHOPIFY_API_SECRET) {
+      console.error("[v0] Missing Shopify API credentials")
+      return NextResponse.json(
+        {
+          error:
+            "Shopify API credentials not configured. Please add SHOPIFY_API_KEY and SHOPIFY_API_SECRET to environment variables.",
+        },
+        { status: 500 },
+      )
+    }
+
     // Generate nonce for CSRF protection
     const nonce = crypto.randomBytes(16).toString("hex")
 
@@ -25,6 +36,8 @@ export async function POST(request: NextRequest) {
     authUrl.searchParams.append("scope", scope)
     authUrl.searchParams.append("redirect_uri", redirectUri)
     authUrl.searchParams.append("state", nonce)
+
+    console.log("[v0] Generated auth URL for shop:", shopName)
 
     return NextResponse.json({
       authUrl: authUrl.toString(),
